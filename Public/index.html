@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Padma-AI</title>
+    <style>
+        /* Updated Gradient: Light Blue to Light Green */
+        body { 
+            background: linear-gradient(135deg, #e0f7fa, #e8f5e9); 
+            font-family: 'Segoe UI', sans-serif; 
+            display: flex; flex-direction: column; height: 100vh; margin: 0; 
+        }
+
+        #header {
+            padding: 15px;
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: #2e7d32;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+
+        #chat-container { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; }
+        
+        /* Added box-shadow for pop effect */
+        .message { 
+            margin: 10px 0; padding: 12px 18px; border-radius: 18px; max-width: 80%; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+        
+        .ai { background: white; align-self: flex-start; border-bottom-left-radius: 2px; }
+        .user { background: #a5d6a7; color: #1b5e20; align-self: flex-end; border-bottom-right-radius: 2px; }
+        
+        #controls { padding: 10px; display: flex; gap: 10px; background: rgba(255,255,255,0.3); }
+        #input-area { display: flex; padding: 15px; background: rgba(255,255,255,0.2); }
+        
+        input { flex: 1; padding: 12px; border-radius: 20px; border: 1px solid #ccc; outline: none; }
+        button { padding: 10px 25px; border-radius: 20px; border: none; background: #66bb6a; color: white; font-weight: bold; cursor: pointer; margin-left: 10px; }
+        button:hover { background: #4caf50; }
+    </style>
+</head>
+<body>
+
+<div id="header">Padma AI</div>
+
+<div id="controls">
+    <select id="lang-select">
+        <option value="English">English</option>
+        <option value="Assamese">Assamese</option>
+        <option value="Filipino">Filipino</option>
+        <option value="Hindi">Hindi</option>
+        <option value="Bodo">Bodo</option>
+        <option value="Nepali">Nepali</option>
+    </select>
+</div>
+
+<div id="chat-container">
+    <div class="message ai">Hello! I am Padma-AI. How can I help you?</div>
+</div>
+
+<div id="input-area">
+    <input type="text" id="user-input" placeholder="Type a message...">
+    <button onclick="sendMessage()">Send</button>
+</div>
+
+<script>
+  let chatHistory = [];
+  
+    async function sendMessage() {
+    const inputField = document.getElementById('user-input');
+    const userInput = inputField.value;
+    const lang = document.getElementById('lang-select').value;
+    
+    const finalPrompt = `Respond in ${lang}. User query: ${userInput}`;
+
+
+    const chatBox = document.getElementById('chat-container');
+
+    if (!userInput) return;
+
+    // 1. Show user message in UI immediately
+    chatBox.innerHTML += `<div class="message user">${userInput}</div>`;
+    
+    // 2. Add ONLY the user's raw message to the history
+    // We remove the "Act as..." text here to stop the AI from resetting its persona.
+    chatHistory.push({ role: "user", parts: [{ text: finalPrompt }] });
+    
+    try {
+        const response = await fetch('http://localhost:3000/ask', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            // Send the history + language preference
+            body: JSON.stringify({ 
+                contents: chatHistory // You'll need to handle this in your server.js
+            }) 
+        });
+
+        const data = await response.json();
+
+        if (data && data.candidates && data.candidates.length > 0) {
+            const reply = data.candidates[0].content.parts[0].text;
+            chatBox.innerHTML += `<div class="message ai">${reply}</div>`;
+            
+            // Save AI reply to history
+            chatHistory.push({ role: "model", parts: [{ text: reply }] });
+        }
+    } catch (e) {
+        alert("Connection Error: " + e.message);
+    }
+    
+    inputField.value = "";
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+</script>
+</body>
+</html>
