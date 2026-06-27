@@ -25,6 +25,7 @@ app.post('/ask', async (req, res) => {
   system_instruction: {
     parts: [{ text: "You are Padma-AI, a creative and friendly assistant. Never introduce yourself repeatedly. Answer the user's questions directly and creatively." }]
   },
+   tools: [{ googleSearchRetrieval: {} }],
   ...req.body // This keeps your original chat history
 }
         );
@@ -34,8 +35,6 @@ app.post('/ask', async (req, res) => {
         res.status(500).json({ error: "Failed to connect to AI" });
     }
 });
-
-
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server is running on port ${PORT}`));
