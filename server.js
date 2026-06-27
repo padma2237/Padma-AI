@@ -7,9 +7,14 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
+
+const path = require('path');
+
+// Update your main route to send the index.html file
 app.get('/', (req, res) => {
-  res.send('Server is running and ready!');
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
+
 
 app.post('/ask', async (req, res) => {
     try {
